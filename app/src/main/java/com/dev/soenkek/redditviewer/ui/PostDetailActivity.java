@@ -14,6 +14,8 @@ import com.dev.soenkek.redditviewer.R;
 import com.dev.soenkek.redditviewer.models.Post;
 import com.dev.soenkek.redditviewer.models.Subreddit;
 import com.dev.soenkek.redditviewer.utils.NetworkUtils;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.squareup.picasso.Picasso;
 
 import java.net.MalformedURLException;
@@ -35,11 +37,19 @@ public class PostDetailActivity extends AppCompatActivity {
     private ImageView imageIv;
     private TextView commentsTv;
     private View commentsV;
+    private AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_detail);
+
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build();
+        mAdView.loadAd(adRequest);
+
 
         Intent callingIntent = getIntent();
         if (callingIntent != null && callingIntent.hasExtra(EXTRA_SUBREDDIT)) {

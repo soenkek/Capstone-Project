@@ -19,13 +19,18 @@ import com.dev.soenkek.redditviewer.models.Post;
 import com.dev.soenkek.redditviewer.models.Subreddit;
 import com.dev.soenkek.redditviewer.transformer.PostStackTransformer;
 import com.dev.soenkek.redditviewer.utils.FetchPostsAsyncTask;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTask.FetchPostsResultListener, PostFragment.PostClickListener {
 
     public static final String EXTRA_SUBREDDIT = "extraSubreddit";
+    public static final String ADMOB_APP_ID_TEST = "ca-app-pub-3940256099942544/6300978111";
     private ViewPager mPager;
+    private AdView mAdView;
 
     private PostStackAdapter mAdapter;
 
@@ -33,6 +38,13 @@ public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        MobileAds.initialize(this, ADMOB_APP_ID_TEST);
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build();
+        mAdView.loadAd(adRequest);
 
 //        FIXME app crash on rotation change
         mPager = findViewById(R.id.main_view_pager);
