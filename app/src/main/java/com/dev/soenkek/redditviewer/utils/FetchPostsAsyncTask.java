@@ -31,9 +31,10 @@ public class FetchPostsAsyncTask extends AsyncTask<String, Void, ArrayList<Post>
         String json = null;
         URL url = null;
         int i = 0;
+        int limit = (10 / strings.length) + 1;
         for (String subreddit : strings) {
             try {
-                url = NetworkUtils.buildPostUrl(subreddit, 1);
+                url = NetworkUtils.buildPostUrl(subreddit, limit);
                 json = NetworkUtils.getHttpUrlResponse(url);
                 Post[] newPosts = JsonUtils.parsePostsJson(json);
                 for (Post newPost : newPosts) {

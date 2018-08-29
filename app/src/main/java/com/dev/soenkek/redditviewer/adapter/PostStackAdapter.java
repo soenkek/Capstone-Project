@@ -30,7 +30,10 @@ public class PostStackAdapter extends FragmentStatePagerAdapter {
         return mData.size();
     }
 
-    public void setmData(ArrayList<Post> mPosts) {
-        this.mData = mPosts;
+    public void addData(ArrayList<Post> posts) {
+        if (mData == null) mData = new ArrayList<>();
+        for (Post post : posts) {
+            this.mData.add(post);
+        }
     }
 }

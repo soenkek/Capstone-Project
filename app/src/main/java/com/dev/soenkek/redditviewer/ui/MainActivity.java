@@ -2,8 +2,9 @@ package com.dev.soenkek.redditviewer.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -11,6 +12,7 @@ import android.view.MenuItem;
 
 import com.dev.soenkek.redditviewer.R;
 import com.dev.soenkek.redditviewer.adapter.PostStackAdapter;
+import com.dev.soenkek.redditviewer.data.DbContract;
 import com.dev.soenkek.redditviewer.models.Post;
 import com.dev.soenkek.redditviewer.transformer.PostStackTransformer;
 import com.dev.soenkek.redditviewer.utils.FetchPostsAsyncTask;
@@ -33,13 +35,30 @@ public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTa
         mAdapter = new PostStackAdapter(getSupportFragmentManager());
         mPager.setPageTransformer(true, new PostStackTransformer());
         mPager.setOffscreenPageLimit(3);
-        new FetchPostsAsyncTask(this).execute(new String[]{"Android", "GetMotivated"});
+
+        Uri uri = DbContract.Subscriptions.CONTENT_URI;
+        //        TODO db operations in background thread
+        Cursor cursor = this.getContentResolver().query(uri, new String[]{DbContract.Subscriptions.COLUMN_NAME}, null, null, null);
+        if (cursor != null) {
+            String[] subreddits =  new String[cursor.getCount()];
+            cursor.moveToFirst();
+            for (int i = 0; i < cursor.getCount(); i++) {
+                subreddits[i] = cursor.getString(cursor.getColumnIndex(DbContract.Subscriptions.COLUMN_NAME));
+                cursor.moveToNext();
+            }
+            if (subreddits.length > 0) {
+                new FetchPostsAsyncTask(this).execute(subreddits);
+            } else {
+//                TODO display message: no subscriptions yet
+            }
+        }
+
     }
 
     @Override
     public void onPostsRetrieved(ArrayList<Post> posts) {
         if (posts != null && posts.size() > 0) {
-            mAdapter.setmData(posts);
+            mAdapter.addData(posts);
             mPager.setAdapter(mAdapter);
         } else {
 //            TODO display error message
@@ -56,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTa
     public boolean onOptionsItemSelected(MenuItem item) {
         Context context =  this;
         switch (item.getItemId()) {
-            case R.id.action_manage_subscriptions:
+            case R.id.action_settings:
                 startActivity(new Intent(context, SubscriptionsActivity.class));
                 break;
         }

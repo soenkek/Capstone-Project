@@ -19,8 +19,8 @@ public class NetworkUtils {
     public static URL buildPostUrl(String subreddit, int limit) throws MalformedURLException {
         URL url = null;
         Uri buildUri = Uri.parse(BASE_URL).buildUpon()
-                .appendPath("r")
-                .appendPath(subreddit)
+//                .appendPath("r")
+                .appendEncodedPath(subreddit)
                 .appendPath("hot.json")
                 .appendQueryParameter("include_over_18", "0")
                 .appendQueryParameter("limit", String.valueOf(limit))

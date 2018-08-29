@@ -1,15 +1,22 @@
 package com.dev.soenkek.redditviewer.adapter;
 
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.dev.soenkek.redditviewer.R;
+import com.dev.soenkek.redditviewer.data.DbContract;
 import com.dev.soenkek.redditviewer.models.Subreddit;
 import com.squareup.picasso.Picasso;
 
@@ -17,13 +24,22 @@ import java.util.ArrayList;
 
 public class SearchableAdapter extends RecyclerView.Adapter<SearchableAdapter.SearchableAdapterViewHolder> {
 
+    private SubscribeClickListener mSubscribeListener;
     private ArrayList<Subreddit> mData;
     private RecyclerView mRecyclerView;
     int mExpandedPosition = -1;
     int mPreviousExpandedPosition = -1;
+    private Context mContext;
 
-    public SearchableAdapter(RecyclerView mRecyclerView) {
+    public interface SubscribeClickListener {
+        void onSubscribe(Subreddit subreddit);
+        void onUnsubscribe(Subreddit subreddit);
+    }
+
+    public SearchableAdapter(SubscribeClickListener mSubscribeListener, RecyclerView mRecyclerView, Context mContext) {
+        this.mSubscribeListener = mSubscribeListener;
         this.mRecyclerView = mRecyclerView;
+        this.mContext = mContext;
     }
 
     @NonNull
@@ -47,9 +63,15 @@ public class SearchableAdapter extends RecyclerView.Adapter<SearchableAdapter.Se
         if (iconUrl != null && !iconUrl.equals("")) {
             Picasso.get().load(iconUrl).into(holder.mIconIv);
         }
+
         final boolean isExpanded = (position == mExpandedPosition);
         holder.mDescriptionTv.setVisibility(isExpanded?View.VISIBLE:View.GONE);
+        holder.mSubscribeBtn.setVisibility(isExpanded?View.VISIBLE:View.GONE);
         holder.itemView.setActivated(isExpanded);
+
+        if (holder.mSubscribeBtn.getVisibility() == View.VISIBLE) {
+            initializeSubscribeBtn(holder, position);
+        }
 
         if (isExpanded) mPreviousExpandedPosition = position;
 
@@ -65,6 +87,40 @@ public class SearchableAdapter extends RecyclerView.Adapter<SearchableAdapter.Se
         });
     }
 
+    private void initializeSubscribeBtn(SearchableAdapterViewHolder holder, final int position) {
+        String name = mData.get(position).getName();
+        Uri uri = DbContract.Subscriptions.CONTENT_URI.buildUpon().appendPath(name).build();
+        //        TODO db operations in background thread
+        Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null && cursor.getCount() > 0) {
+            holder.mSubscribeBtn.setText(R.string.label_unsubscribe);
+        } else {
+            holder.mSubscribeBtn.setText(R.string.label_subscribe);
+        }
+        holder.mSubscribeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String btnText = ((Button) v).getText().toString();
+                if (btnText.equals(mContext.getResources().getString(R.string.label_subscribe))) {
+                    mSubscribeListener.onSubscribe(mData.get(position));
+                    Uri uri = DbContract.Subscriptions.CONTENT_URI;
+                    ContentValues cv = new ContentValues();
+                    cv.put(DbContract.Subscriptions.COLUMN_NAME, mData.get(position).getName());
+                    cv.put(DbContract.Subscriptions.COLUMN_ICON_URL, mData.get(position).getIconUrl());
+                    mContext.getContentResolver().insert(uri, cv);
+                    ((Button) v).setText(R.string.label_unsubscribe);
+                } else if (btnText.equals(mContext.getResources().getString(R.string.label_unsubscribe))) {
+                    mSubscribeListener.onUnsubscribe(mData.get(position));
+                    Uri uri = DbContract.Subscriptions.CONTENT_URI.buildUpon().appendPath(mData.get(position).getName()).build();
+                    mContext.getContentResolver().delete(uri, null, null);
+                    ((Button) v).setText(R.string.label_subscribe);
+                }
+            }
+        });
+
+        cursor.close();
+    }
+
     @Override
     public int getItemCount() {
         if (mData == null) return 0;
@@ -76,6 +132,7 @@ public class SearchableAdapter extends RecyclerView.Adapter<SearchableAdapter.Se
         public final TextView mNameTv;
         public final TextView mNumSubscribersTv;
         public final TextView mDescriptionTv;
+        public final Button mSubscribeBtn;
 
         public SearchableAdapterViewHolder(View itemView) {
             super(itemView);
@@ -83,6 +140,7 @@ public class SearchableAdapter extends RecyclerView.Adapter<SearchableAdapter.Se
             mNameTv = itemView.findViewById(R.id.item_searchable_name_tv);
             mNumSubscribersTv = itemView.findViewById(R.id.item_searchable_num_subscribers_tv);
             mDescriptionTv = itemView.findViewById(R.id.item_searchable_description_tv);
+            mSubscribeBtn = itemView.findViewById(R.id.item_searchable_num_subscribe_btn);
         }
     }
 
