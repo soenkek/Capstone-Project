@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -13,14 +14,17 @@ import android.view.MenuItem;
 import com.dev.soenkek.redditviewer.R;
 import com.dev.soenkek.redditviewer.adapter.PostStackAdapter;
 import com.dev.soenkek.redditviewer.data.DbContract;
+import com.dev.soenkek.redditviewer.fragments.PostFragment;
 import com.dev.soenkek.redditviewer.models.Post;
+import com.dev.soenkek.redditviewer.models.Subreddit;
 import com.dev.soenkek.redditviewer.transformer.PostStackTransformer;
 import com.dev.soenkek.redditviewer.utils.FetchPostsAsyncTask;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTask.FetchPostsResultListener {
+public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTask.FetchPostsResultListener, PostFragment.PostClickListener {
 
+    public static final String EXTRA_SUBREDDIT = "extraSubreddit";
     private ViewPager mPager;
 
     private PostStackAdapter mAdapter;
@@ -32,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTa
 
 //        FIXME app crash on rotation change
         mPager = findViewById(R.id.main_view_pager);
-        mAdapter = new PostStackAdapter(getSupportFragmentManager());
+        mAdapter = new PostStackAdapter(getSupportFragmentManager(), this);
         mPager.setPageTransformer(true, new PostStackTransformer());
         mPager.setOffscreenPageLimit(3);
 
@@ -52,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTa
 //                TODO display message: no subscriptions yet
             }
         }
-
+        cursor.close();
     }
 
     @Override
@@ -80,5 +84,10 @@ public class MainActivity extends AppCompatActivity implements FetchPostsAsyncTa
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onPostClicked(Post post) {
+        startActivity(new Intent(this, PostDetailActivity.class).putExtra(EXTRA_SUBREDDIT, post));
     }
 }

@@ -1,9 +1,8 @@
 package com.dev.soenkek.redditviewer.utils;
 
-import android.support.annotation.Nullable;
-import android.util.Log;
 import android.util.Pair;
 
+import com.dev.soenkek.redditviewer.models.Comment;
 import com.dev.soenkek.redditviewer.models.Post;
 import com.dev.soenkek.redditviewer.models.Subreddit;
 
@@ -18,7 +17,8 @@ public class JsonUtils {
         Post[] posts = new Post[arr.length()];
         for (int i = 0; i < arr.length(); i++) {
             JSONObject data = arr.getJSONObject(i).getJSONObject("data");
-            String subreddit = data.getString("subreddit");
+            String postId = data.optString("id");
+            String subreddit = data.optString("subreddit");
             String title = data.getString("title");
 //            String type = data.getString("type");
             String text = data.getString("selftext");
@@ -27,7 +27,7 @@ public class JsonUtils {
             String timeStamp = data.getString("created_utc");
             int score = data.getInt("score");
             int numComments = data.getInt("num_comments");
-            posts[i] = new Post(null, title, null, text, url, author, timeStamp, score, numComments);
+            posts[i] = new Post(postId, subreddit, title, null, text, url, author, timeStamp, score, numComments);
         }
         return posts;
     }
@@ -49,5 +49,24 @@ public class JsonUtils {
             subreddits[i] = new Subreddit(name, description, iconUrl, numSubscribers);
         }
         return new Pair<>(subreddits, after);
+    }
+
+    public static Comment[] parseCommentsJson(String json) throws JSONException {
+        JSONObject jsonObject = new JSONArray(json).getJSONObject(1);
+        JSONArray children = jsonObject.getJSONObject("data").getJSONArray("children");
+        Comment[] comments = new Comment[children.length()];
+        for (int i = 0; i < children.length(); i++) {
+            JSONObject data = children.getJSONObject(i).getJSONObject("data");
+
+            String id = data.optString("id");
+            String author = data.optString("author");
+            int score = data.optInt("score");
+            String timestamp = data.optString("created_utc");
+            String text = data.optString("body");
+//            String repliesJson = new JSONArray(data.getJSONObject("replies").getJSONObject("data")).toString();
+//            Comment[] replies = parseCommentsJson(repliesJson);
+            comments[i] = new Comment(id, author, score, timestamp, text, null);
+        }
+        return comments;
     }
 }

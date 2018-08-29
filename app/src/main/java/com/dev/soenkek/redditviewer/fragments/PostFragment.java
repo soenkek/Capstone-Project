@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,10 +14,25 @@ import android.widget.TextView;
 
 import com.dev.soenkek.redditviewer.R;
 import com.dev.soenkek.redditviewer.models.Post;
+import com.dev.soenkek.redditviewer.models.Subreddit;
+import com.squareup.picasso.Picasso;
 
 public class PostFragment extends Fragment {
 
     private Post mPost;
+
+    private PostClickListener mCallback;
+
+    public PostFragment() {
+    }
+
+    public void setmCallback(PostClickListener mCallback) {
+        this.mCallback = mCallback;
+    }
+
+    public interface PostClickListener {
+        void onPostClicked(Post post);
+    }
 
     @Nullable
     @Override
@@ -50,9 +67,17 @@ public class PostFragment extends Fragment {
             imageIv.setVisibility(View.GONE);
         } else {
             imageIv.setVisibility(View.VISIBLE);
+            Picasso.get().load(url).into(imageIv);
         }
         TextView commentsTv = rootView.findViewById(R.id.post_comments_label);
         commentsTv.setText(comments);
+
+        rootView.findViewById(R.id.post_card_view).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCallback.onPostClicked(mPost);
+            }
+        });
 
         return rootView;
     }

@@ -29,6 +29,19 @@ public class NetworkUtils {
         return url;
     }
 
+    public static URL buildCommentsUrl(String subreddit, String postId) throws MalformedURLException {
+        URL url = null;
+        Uri buildUri = Uri.parse(BASE_URL).buildUpon()
+//                .appendPath("r")
+                .appendEncodedPath(subreddit)
+                .appendPath("comments")
+                .appendPath(postId)
+                .appendPath(".json")
+                .build();
+        url = new URL(buildUri.toString());
+        return url;
+    }
+
     public static URL buildSearchUrl(String query, int limit, String after) throws MalformedURLException, UnsupportedEncodingException {
         URL url = null;
         Uri buildUri = Uri.parse(BASE_URL).buildUpon()
